@@ -1,0 +1,35 @@
+-- ==============================================================================
+-- ESTRUCTURA DE LA BASE DE DATOS - MIALBUMMUNDIAL26 V05
+-- Optimizado para entornos de producción MySQL / MariaDB (InfinityFree)
+-- ==============================================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `laminas`;
+DROP TABLE IF EXISTS `usuarios`;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1. CREACIÓN DE LA TABLA DE USUARIOS
+CREATE TABLE `usuarios` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(50) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
+  `creado_en` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. CREACIÓN DE LA TABLA DE LÁMINAS (INVENTARIO)
+CREATE TABLE `laminas` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `usuario_id` INT NOT NULL,
+  `numero` VARCHAR(20) NOT NULL,
+  `nombre` VARCHAR(100) NOT NULL,
+  `es_especial` TINYINT(1) DEFAULT 0,
+  `cantidad` INT DEFAULT 0,
+  -- Restricción de llave foránea vinculada al ID del usuario
+  CONSTRAINT `fk_laminas_usuarios` 
+    FOREIGN KEY (`usuario_id`) 
+    REFERENCES `usuarios` (`id`) 
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. ÍNDICES DE OPTIMIZACIÓN (Para que las consultas AJAX carguen en milisegundos)
+ALTER TABLE `laminas` ADD INDEX `idx_usuario_laminas` (`usuario_id`);
