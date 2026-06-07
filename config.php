@@ -1,10 +1,10 @@
 <?php
 // config.php - Configuración exclusiva para Laragon local
 
-define('DB_HOST', 'sql103.infinityfree.com');     // Ejemplo: sql205.infinityfree.com
-define('DB_NAME', 'if0_42109150_album_panini');       // Ejemplo: if0_3821045_album_panini
-define('DB_USER', 'if0_42109150');     // Ejemplo: if0_3821045
-define('DB_PASS', 'boaCmmPTtZ7JAu9');     // La contraseña de tu cuenta de InfinityFree
+define('DB_HOST', 'xx');     // Ejemplo: sql205.infinityfree.com
+define('DB_NAME', 'xx');       // Ejemplo: if0_3821045_album_panini
+define('DB_USER', 'xx');     // Ejemplo: if0_3821045
+define('DB_PASS', 'xx');     // La contraseña de tu cuenta de InfinityFree
 
 try {
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
