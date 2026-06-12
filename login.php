@@ -9,7 +9,7 @@ $error_registro = '';
 $success_registro = '';
 $mostrar_pestana_registro = false;
 
-// FUNCIÓN DE INICIALIZACIÓN OPTIMIZADA
+// FUNCIÓN DE INICIALIZACIÓN OPTIMIZADA (Versión 4 Parámetros - V06)
 function inicializar_album_local($pdo, $usuario_id) {
     // 📂 Importamos el listado masivo desde el archivo externo aislado
     $laminas_iniciales = require 'datos_album.php';
@@ -17,10 +17,24 @@ function inicializar_album_local($pdo, $usuario_id) {
     try {
         $pdo->beginTransaction(); // Abrimos transacción para máxima velocidad local
         
-        $stmt = $pdo->prepare("INSERT INTO laminas (usuario_id, numero, nombre, es_especial, cantidad) VALUES (?, ?, ?, ?, 0)");
+        // Cambiamos el '0' fijo por un signo de interrogación '?' para la cantidad
+        $stmt = $pdo->prepare("INSERT INTO laminas (usuario_id, numero, nombre, es_especial, cantidad) VALUES (?, ?, ?, ?, ?)");
         
         foreach ($laminas_iniciales as $lamina) {
-            $stmt->execute([$usuario_id, $lamina[0], $lamina[1], $lamina[2]]);
+            // Asignamos las posiciones del arreglo de forma segura
+            $numero      = $lamina[0];
+            $nombre      = $lamina[1];
+            $es_especial = $lamina[2] ?? 0; // Tercer elemento del array
+            $cantidad    = $lamina[3] ?? 0; // Cuarto elemento del array (Si no existe, arranca en 0)
+
+            // Ejecutamos pasando las 5 variables en orden a los '?'
+            $stmt->execute([
+                $usuario_id, 
+                $numero, 
+                $nombre, 
+                $es_especial, 
+                $cantidad
+            ]);
         }
         
         $pdo->commit(); // Confirmamos los inserts simultáneos
@@ -89,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso - Álbum Collector</title>
+    <title>Acceso - Mi Álbum Mundial 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .nav-tabs .nav-link { color: #495057; font-weight: 600; border: none; }
@@ -100,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-light d-flex align-items-center justify-content-center" style="min-height: 100vh;">
 
     <div class="card card-auth shadow-lg p-4" style="width: 100%; max-width: 430px;">
-        <h2 class="text-center mb-4 fw-bold">⚽ Álbum Collector</h2>
+        <h2 class="text-center mb-4 fw-bold">⚽ Mi Álbum Mundial 2026</h2>
         
         <ul class="nav nav-tabs nav-fill mb-4" id="authTabs" role="tablist">
             <li class="nav-item">

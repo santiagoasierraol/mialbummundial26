@@ -1,10 +1,13 @@
 <?php
 // config.php - Configuración exclusiva para Laragon local
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+    $_SERVER['HTTPS'] = 'on';
+}
 
-define('DB_HOST', 'xx');     // Ejemplo: sql205.infinityfree.com
-define('DB_NAME', 'xx');       // Ejemplo: if0_3821045_album_panini
-define('DB_USER', 'xx');     // Ejemplo: if0_3821045
-define('DB_PASS', 'bxx');     // La contraseña de tu cuenta de InfinityFree
+define('DB_HOST', '');     // Ejemplo: sql205.infinityfree.com
+define('DB_NAME', '');       // Ejemplo: if0_3821045_album_panini
+define('DB_USER', '');     // Ejemplo: if0_3821045
+define('DB_PASS', '');     // La contraseña de tu cuenta de InfinityFree
 
 try {
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";

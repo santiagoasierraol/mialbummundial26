@@ -33,20 +33,13 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Repetidas - Álbum Collector</title>
+    <title>Mi Álbum Mundial - Repetidas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">⚽ Álbum Mundial 2026</a>
-            <div class="navbar-nav ms-auto">
-                <a class="btn btn-sm btn-outline-light me-2 fw-bold" href="index.php">🏠 Volver al Home</a>
-                <a class="btn btn-sm btn-outline-danger fw-bold" href="logout.php">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
+<body class="bg-light">
+    <?php include 'navbar.php'; ?>
+    <div class="container mb-5">
 
     <div class="container">
         <div class="row mb-3">
