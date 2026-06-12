@@ -3,6 +3,10 @@
 // index.php - Dashboard Principal del Álbum Mundial 2026
 // Muestra estadísticas dinámicas y progreso del coleccionista
 // ==============================================================================
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+    //$_SERVER['HTTPS'] = 'on';
+}
+session_start();
 require_once 'config.php';
 
 // Validar que el usuario tenga una sesión activa
@@ -10,6 +14,113 @@ check_login();
 
 $usuario_id = $_SESSION['usuario_id'];
 $username = $_SESSION['username'];
+
+// ==============================================================================
+// LÓGICA DE ESTADÍSTICAS POR EQUIPOS - MIALBUMMUNDIAL26 V07
+// ==============================================================================
+
+// Mapeo interno para mostrar nombres reales en lugar de solo las siglas de la BD
+$nombres_equipos = [
+        'FWC' => '🏆 Especiales y Estadios Panini',
+        // ANFITRIONES
+        'CAN' => '🇨🇦 Selección Canadá',
+        'USA' => '🇺🇸 Selección Estados Unidos',
+        'MEX' => '🇲🇽 Selección México',
+
+        // CONMEBOL / SUDAMÉRICA
+        'ARG' => '🇦🇷 Selección Argentina',
+        'BRA' => '🇧🇷 Selección Brasil',
+        'COL' => '🇨🇴 Selección Colombia',
+        'ECU' => '🇪🇨 Selección Ecuador',
+        'PAR' => '🇵🇾 Selección Paraguay',
+        'URU' => '🇺🇺 Selección Uruguay',
+        'HAI' => '🇭🇹 Selección Haití',
+        'CUW' => '🇨🇼 Selección Curazao',
+        'PAN' => '🇵🇦 Selección Panama',
+
+        // UEFA / EUROPA
+        'GER' => '🇩🇪 Selección Alemania',
+        'AUT' => '🇦🇹 Selección Austria',
+        'BEL' => '🇧🇪 Selección Bélgica',
+        'CRO' => '🇭🇷 Selección Croacia',
+        'SCO' => '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Selección Escocia',
+        'ESP' => '🇪🇸 Selección España',
+        'FRA' => '🇫🇷 Selección Francia',
+        'ENG' => '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Selección Inglaterra',
+        'NOR' => '🇳🇴 Selección Noruega',
+        'NED' => '🇳🇱 Selección Países Bajos',
+        'POR' => '🇵🇹 Selección Portugal',
+        'SUI' => '🇨🇭 Selección Suiza',
+        'SWE' => '🇸🇪 Selección Suecia',
+        'CZE' => '🇨🇿 Selección Chequia',
+        'TUR' => '🇹🇷 Selección Turquía',
+        'BIH' => '🇧🇦 Selección Bosnia y H.',
+
+        // CAF / ÁFRICA
+        'ALG' => '🇩🇿 Selección Argelia',
+        'CPV' => '🇨🇻 Selección Cabo Verde',
+        'CIV' => '🇨🇮 Selección Costa de Marfil',
+        'EGY' => '🇪🇬 Selección Egipto',
+        'GHA' => '🇬🇭 Selección Ghana',
+        'MAR' => '🇲🇦 Selección Marruecos',
+        'SEN' => '🇸🇳 Selección Senegal',
+        'RSA' => '🇿🇦 Selección Sudáfrica',
+        'TUN' => '🇹🇳 Selección Túnez',
+        'COD' => '🇨🇩 Selección RD Congo',
+
+        // AFC / ASIA
+        'KSA' => '🇸🇦 Selección Arabia S.',
+        'AUS' => '🇦🇺 Selección Australia',
+        'KOR' => '🇰🇷 Selección Corea del Sur',
+        'IRQ' => '🇮🇶 Selección Irak/EAU',
+        'IRN' => '🇮🇷 Selección Irán',
+        'JPN' => '🇯🇵 Selección Japón',
+        'JOR' => '🇯🇴 Selección Jordania',
+        'QAT' => '🇶🇦 Selección Qatar',
+        'UZB' => '🇺🇿 Selección Uzbekistán',
+
+        // OFC / OCEANÍA
+        'NZL' => '🇳🇿 Selección Nueva Zelanda',
+        'CC'  => '🥤 Sección Especial Coca-Cola'
+];
+
+try {
+    // 1. TOP 5: Equipos con MÁS láminas (Donde cantidad > 0, es decir, láminas obtenidas únicas)
+    $sql_mas = "SELECT SUBSTRING_INDEX(numero, ' ', 1) AS sigla, COUNT(*) AS total 
+                FROM laminas 
+                WHERE usuario_id = ? AND cantidad > 0 
+                GROUP BY sigla 
+                ORDER BY total DESC 
+                LIMIT 5";
+    $stmt = $pdo->prepare($sql_mas);
+    $stmt->execute([$usuario_id]);
+    $top_mas_laminas = $stmt->fetchAll();
+
+    // 2. TOP 5: Equipos con MENOS láminas (Contamos cuántas tiene obtenidas cada equipo para ver los más vacíos)
+    $sql_menos = "SELECT SUBSTRING_INDEX(numero, ' ', 1) AS sigla, COUNT(*) AS total 
+                  FROM laminas 
+                  WHERE usuario_id = ? AND cantidad > 0 
+                  GROUP BY sigla 
+                  ORDER BY total ASC 
+                  LIMIT 5";
+    $stmt = $pdo->prepare($sql_menos);
+    $stmt->execute([$usuario_id]);
+    $top_menos_laminas = $stmt->fetchAll();
+
+    // 3. TOP 5: Equipos con MÁS REPETIDAS (Suma de excedentes: si cantidad es 3, sumamos 2 repetidas)
+    $sql_rep = "SELECT SUBSTRING_INDEX(numero, ' ', 1) AS sigla, SUM(cantidad - 1) AS total_repetidas 
+                FROM laminas 
+                WHERE usuario_id = ? AND cantidad > 1 
+                GROUP BY sigla 
+                ORDER BY total_repetidas DESC 
+                LIMIT 5";
+    $stmt = $pdo->prepare($sql_rep);
+    $stmt->execute([$usuario_id]);
+    $top_repetidas = $stmt->fetchAll();
+
+} catch (\PDOException $e) {
+    die("Error calculando estadísticas: " . $e->getMessage());
+}
 
 try {
     // 1. OBTENER TOTAL DE LÁMINAS REGISTRADAS PARA ESTE USUARIO
@@ -47,33 +158,17 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Álbum Collector</title>
+    <title>Mi Álbum Mundial - Inicio</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .card-stat { transition: transform 0.2s; border: none; }
         .card-stat:hover { transform: translateY(-5px); }
     </style>
 </head>
-<body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">⚽ Álbum Mundial 2026</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav align-items-center">
-                    <li class="nav-itemme-3">
-                        <span class="navbar-text text-white fw-bold">¡Hola, <?= htmlspecialchars($username) ?>!</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-sm btn-outline-danger fw-bold" href="logout.php">Cerrar Sesión</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<body class="bg-light">
+    <?php include 'navbar.php'; ?>
+    <div class="container mb-5">
 
     <div class="container">
         
@@ -132,22 +227,90 @@ try {
             </div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-12 col-md-6">
-                <div class="card shadow-sm h-100 p-4 bg-white">
-                    <h4 class="fw-bold text-dark mb-3">Gestionar mi Álbum</h4>
-                    <p class="text-muted">Ingresa al inventario completo para registrar las láminas que te van saliendo en los sobres, organizadas por selecciones.</p>
-                    <a href="laminas.php" class="btn btn-primary fw-bold py-2 mt-auto">👀 Ver y Editar mis Láminas</a>
+        <!-- ==============================================================================
+            SECCIÓN DE RANKINGS Y TOPS - VERSIÓN V07
+            ============================================================================== -->
+        <div class="row g-3 mb-5">
+
+            <!-- COLUMNA 1: TOP 5 MÁS LLENOS -->
+            <div class="col-12 col-md-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-success text-white fw-bold py-3">
+                        📈 Top 5: Equipos Más Avanzados
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <?php if (empty($top_mas_laminas)): ?>
+                            <li class="list-group-item text-muted text-center py-3">Aún no tienes láminas registradas.</li>
+                        <?php else: ?>
+                            <?php foreach ($top_mas_laminas as $index => $equipo): 
+                                $nombre_real = $nombres_equipos[$equipo['sigla']] ?? '🌍 ' . $equipo['sigla'];
+                            ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center fw-medium text-secondary">
+                                    <div>
+                                        <span class="badge bg-light text-dark me-2"><?= $index + 1 ?>°</span>
+                                        <?= $nombre_real ?>
+                                    </div>
+                                    <span class="badge bg-success rounded-pill"><?= $equipo['total'] ?> monas</span>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
                 </div>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="card shadow-sm h-100 p-4 bg-white">
-                    <h4 class="fw-bold text-dark mb-3">Zona de Intercambio</h4>
-                    <p class="text-muted">Mira rápidamente un listado exclusivo de tus láminas repetidas para que te sea más fácil negociar y cambiar con tus amigos.</p>
-                    <a href="repetidas.php" class="btn btn-warning fw-bold py-2 mt-auto text-dark">🔄 Ver Solo Repetidas</a>
+
+            <!-- COLUMNA 2: TOP 5 MENOS AVANZADOS -->
+            <div class="col-12 col-md-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-danger text-white fw-bold py-3">
+                        📉 Top 5: Equipos Menos Avanzados
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <?php if (empty($top_menos_laminas)): ?>
+                            <li class="list-group-item text-muted text-center py-3">Aún no tienes láminas registradas.</li>
+                        <?php else: ?>
+                            <?php foreach ($top_menos_laminas as $index => $equipo): 
+                                $nombre_real = $nombres_equipos[$equipo['sigla']] ?? '🌍 ' . $equipo['sigla'];
+                            ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center fw-medium text-secondary">
+                                    <div>
+                                        <span class="badge bg-light text-dark me-2"><?= $index + 1 ?>°</span>
+                                        <?= $nombre_real ?>
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill"><?= $equipo['total'] ?> monas</span>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
                 </div>
             </div>
-        </div>
+
+            <!-- COLUMNA 3: TOP 5 MÁS REPETIDAS -->
+            <div class="col-12 col-md-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-warning text-dark fw-bold py-3">
+                        🔄 Top 5: Equipos con Más Repetidas
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <?php if (empty($top_repetidas)): ?>
+                            <li class="list-group-item text-muted text-center py-3">¡Excelente! No tienes láminas repetidas aún.</li>
+                        <?php else: ?>
+                            <?php foreach ($top_repetidas as $index => $equipo): 
+                                $nombre_real = $nombres_equipos[$equipo['sigla']] ?? '🌍 ' . $equipo['sigla'];
+                            ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center fw-medium text-secondary">
+                                    <div>
+                                        <span class="badge bg-light text-dark me-2"><?= $index + 1 ?>°</span>
+                                        <?= $nombre_real ?>
+                                    </div>
+                                    <span class="badge bg-warning text-dark rounded-pill fw-bold">+<?= $equipo['total_repetidas'] ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
+
+        </div>        
 
     </div>
 

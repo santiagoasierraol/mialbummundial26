@@ -20,17 +20,65 @@ try {
     // MAPEO DE PAÍSES CON BANDERAS NATIVAS
     $paises_map = [
         'FWC' => '🏆 Especiales y Estadios Panini',
-        'COL' => '🇨🇴 Selección Colombia',
+        // ANFITRIONES
+        'CAN' => '🇨🇦 Selección Canadá',
+        'USA' => '🇺🇸 Selección Estados Unidos',
+        'MEX' => '🇲🇽 Selección México',
+
+        // CONMEBOL / SUDAMÉRICA
         'ARG' => '🇦🇷 Selección Argentina',
         'BRA' => '🇧🇷 Selección Brasil',
-        'POR' => '🇵🇹 Selección Portugal',
-        'FRA' => '🇫🇷 Selección Francia',
-        'MEX' => '🇲🇽 Selección México',
-        'USA' => '🇺🇸 Selección Estados Unidos',
+        'COL' => '🇨🇴 Selección Colombia',
+        'ECU' => '🇪🇨 Selección Ecuador',
+        'PAR' => '🇵🇾 Selección Paraguay',
+        'URU' => '🇺🇺 Selección Uruguay',
+        'HAI' => '🇭🇹 Selección Haití',
+        'CUW' => '🇨🇼 Selección Curazao',
+        'PAN' => '🇵🇦 Selección Panama',
+
+        // UEFA / EUROPA
         'GER' => '🇩🇪 Selección Alemania',
+        'AUT' => '🇦🇹 Selección Austria',
+        'BEL' => '🇧🇪 Selección Bélgica',
+        'CRO' => '🇭🇷 Selección Croacia',
+        'SCO' => '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Selección Escocia',
         'ESP' => '🇪🇸 Selección España',
-        'ITA' => '🇮🇹 Selección Italia',
-        'ENG' => '🏴' . "󠁢󠁥󠁮󠁧󠁿" . ' Selección Inglaterra', // Fix sintaxis string largo
+        'FRA' => '🇫🇷 Selección Francia',
+        'ENG' => '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Selección Inglaterra',
+        'NOR' => '🇳🇴 Selección Noruega',
+        'NED' => '🇳🇱 Selección Países Bajos',
+        'POR' => '🇵🇹 Selección Portugal',
+        'SUI' => '🇨🇭 Selección Suiza',
+        'SWE' => '🇸🇪 Selección Suecia',
+        'CZE' => '🇨🇿 Selección Chequia',
+        'TUR' => '🇹🇷 Selección Turquía',
+        'BIH' => '🇧🇦 Selección Bosnia y H.',
+
+        // CAF / ÁFRICA
+        'ALG' => '🇩🇿 Selección Argelia',
+        'CPV' => '🇨🇻 Selección Cabo Verde',
+        'CIV' => '🇨🇮 Selección Costa de Marfil',
+        'EGY' => '🇪🇬 Selección Egipto',
+        'GHA' => '🇬🇭 Selección Ghana',
+        'MAR' => '🇲🇦 Selección Marruecos',
+        'SEN' => '🇸🇳 Selección Senegal',
+        'RSA' => '🇿🇦 Selección Sudáfrica',
+        'TUN' => '🇹🇳 Selección Túnez',
+        'COD' => '🇨🇩 Selección RD Congo',
+
+        // AFC / ASIA
+        'KSA' => '🇸🇦 Selección Arabia S.',
+        'AUS' => '🇦🇺 Selección Australia',
+        'KOR' => '🇰🇷 Selección Corea del Sur',
+        'IRQ' => '🇮🇶 Selección Irak/EAU',
+        'IRN' => '🇮🇷 Selección Irán',
+        'JPN' => '🇯🇵 Selección Japón',
+        'JOR' => '🇯🇴 Selección Jordania',
+        'QAT' => '🇶🇦 Selección Qatar',
+        'UZB' => '🇺🇿 Selección Uzbekistán',
+
+        // OFC / OCEANÍA
+        'NZL' => '🇳🇿 Selección Nueva Zelanda',
         'CC'  => '🥤 Sección Especial Coca-Cola'
     ];
 
@@ -53,10 +101,10 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Álbum - Collector</title>
+    <title>Mi Álbum Mundia - Láminas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .card-lamina { border: 2px solid #dee2e6; transition: all 0.2s; border-radius: 12px; }
+        .card-lamina { border: 2px solid #b9b9b9; transition: all 0.2s; border-radius: 12px; background-color: #dfdfdf; }
         
         /* 🟩 COLOR VERDE: Tienes exactamente 1 (Pegada) */
         .card-lamina.poseida { border-color: #198754; background-color: #f8fff9; }
@@ -83,17 +131,9 @@ try {
         #sin-resultados { display: none; }
     </style>
 </head>
-<body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">⚽ Álbum Mundial 2026</a>
-            <div class="navbar-nav ms-auto">
-                <a class="btn btn-sm btn-outline-light me-2 fw-bold" href="index.php">🏠 Volver al Home</a>
-                <a class="btn btn-sm btn-outline-danger fw-bold" href="logout.php">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
+<body class="bg-light">
+    <?php include 'navbar.php'; ?>
 
     <div class="container mb-5">
         <div class="row mb-4">
