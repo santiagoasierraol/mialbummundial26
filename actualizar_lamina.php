@@ -5,11 +5,8 @@
 // ==============================================================================
 require_once 'config.php';
 
-// Verificar que el usuario tenga una sesión válida en Laragon
-if (!isset($_SESSION['usuario_id']) || !isset($_POST['id']) || !isset($_POST['accion'])) {
-    echo json_encode(['success' => false, 'error' => 'Petición no válida o sesión expirada']);
-    exit;
-}
+// Validar que el usuario tenga una sesión activa (excepto en el index si es el login)
+check_login();
 
 $usuario_id = $_SESSION['usuario_id'];
 $lamina_id = intval($_POST['id']);

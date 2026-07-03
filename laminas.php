@@ -3,6 +3,18 @@
 // laminas.php (Versión Completa con Buscador Asíncrono en Tiempo Real)
 // Gestión de Inventario Organizado por Países con Filtro de Búsqueda Rápida
 // ==============================================================================
+// ==============================================================================
+// laminas.php (Versión V08 - Grilla Compacta y Mobile-First)
+// Gestión de Inventario con Filtro en Tiempo Real, AJAX y Diseño Optimizado para Celulares
+// ==============================================================================
+// ==============================================================================
+// laminas.php (Versión V08-MICRO - Alto Rendimiento)
+// Gestión de Inventario con Filtro Asíncrono y Agrupación Indexada por Base de Datos
+// ==============================================================================
+// ==============================================================================
+// laminas.php (Versión V09-10 - Arquitectura Híbrida de Alto Rendimiento)
+// Carga Asíncrona bajo demanda (Infinite Scroll) con Motor de Búsqueda Debounce
+// ==============================================================================
 require_once 'config.php';
 
 // Validar sesión activa en Laragon
@@ -10,101 +22,19 @@ check_login();
 
 $usuario_id = $_SESSION['usuario_id'];
 $username = $_SESSION['username'];
-
-try {
-    // CONSULTA GENERAL DE LÁMINAS DEL USUARIO
-    $stmt = $pdo->prepare("SELECT * FROM laminas WHERE usuario_id = ? ORDER BY id ASC");
-    $stmt->execute([$usuario_id]);
-    $todas_las_laminas = $stmt->fetchAll();
-
-    // MAPEO DE PAÍSES CON BANDERAS NATIVAS
-    $paises_map = [
-        'FWC' => '🏆 Especiales y Estadios Panini',
-        // ANFITRIONES
-        'CAN' => '🇨🇦 Selección Canadá',
-        'USA' => '🇺🇸 Selección Estados Unidos',
-        'MEX' => '🇲🇽 Selección México',
-
-        // CONMEBOL / SUDAMÉRICA
-        'ARG' => '🇦🇷 Selección Argentina',
-        'BRA' => '🇧🇷 Selección Brasil',
-        'COL' => '🇨🇴 Selección Colombia',
-        'ECU' => '🇪🇨 Selección Ecuador',
-        'PAR' => '🇵🇾 Selección Paraguay',
-        'URU' => '🇺🇺 Selección Uruguay',
-        'HAI' => '🇭🇹 Selección Haití',
-        'CUW' => '🇨🇼 Selección Curazao',
-        'PAN' => '🇵🇦 Selección Panama',
-
-        // UEFA / EUROPA
-        'GER' => '🇩🇪 Selección Alemania',
-        'AUT' => '🇦🇹 Selección Austria',
-        'BEL' => '🇧🇪 Selección Bélgica',
-        'CRO' => '🇭🇷 Selección Croacia',
-        'SCO' => '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Selección Escocia',
-        'ESP' => '🇪🇸 Selección España',
-        'FRA' => '🇫🇷 Selección Francia',
-        'ENG' => '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Selección Inglaterra',
-        'NOR' => '🇳🇴 Selección Noruega',
-        'NED' => '🇳🇱 Selección Países Bajos',
-        'POR' => '🇵🇹 Selección Portugal',
-        'SUI' => '🇨🇭 Selección Suiza',
-        'SWE' => '🇸🇪 Selección Suecia',
-        'CZE' => '🇨🇿 Selección Chequia',
-        'TUR' => '🇹🇷 Selección Turquía',
-        'BIH' => '🇧🇦 Selección Bosnia y H.',
-
-        // CAF / ÁFRICA
-        'ALG' => '🇩🇿 Selección Argelia',
-        'CPV' => '🇨🇻 Selección Cabo Verde',
-        'CIV' => '🇨🇮 Selección Costa de Marfil',
-        'EGY' => '🇪🇬 Selección Egipto',
-        'GHA' => '🇬🇭 Selección Ghana',
-        'MAR' => '🇲🇦 Selección Marruecos',
-        'SEN' => '🇸🇳 Selección Senegal',
-        'RSA' => '🇿🇦 Selección Sudáfrica',
-        'TUN' => '🇹🇳 Selección Túnez',
-        'COD' => '🇨🇩 Selección RD Congo',
-
-        // AFC / ASIA
-        'KSA' => '🇸🇦 Selección Arabia S.',
-        'AUS' => '🇦🇺 Selección Australia',
-        'KOR' => '🇰🇷 Selección Corea del Sur',
-        'IRQ' => '🇮🇶 Selección Irak/EAU',
-        'IRN' => '🇮🇷 Selección Irán',
-        'JPN' => '🇯🇵 Selección Japón',
-        'JOR' => '🇯🇴 Selección Jordania',
-        'QAT' => '🇶🇦 Selección Qatar',
-        'UZB' => '🇺🇿 Selección Uzbekistán',
-
-        // OFC / OCEANÍA
-        'NZL' => '🇳🇿 Selección Nueva Zelanda',
-        'CC'  => '🥤 Sección Especial Coca-Cola'
-    ];
-
-    // AGRUPACIÓN EN ARREGLO MULTIDIMENSIONAL
-    $album_agrupado = [];
-    foreach ($todas_las_laminas as $lamina) {
-        $partes = explode(' ', $lamina['numero']);
-        $sigla = $partes[0];
-
-        $grupo_nombre = $paises_map[$sigla] ?? '🌍 Otras Naciones';
-        $album_agrupado[$grupo_nombre][] = $lamina;
-    }
-
-} catch (\PDOException $e) {
-    die("Error al cargar el álbum: " . $e->getMessage());
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Álbum Mundia - Láminas</title>
+    <title>Mi Álbum Mundial - Láminas</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link class="favicon-apple" rel="apple-touch-icon" href="img/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .card-lamina { border: 2px solid #b9b9b9; transition: all 0.2s; border-radius: 12px; background-color: #dfdfdf; }
+        /* Base por defecto en gris para las faltantes (cantidad 0) */
+        .card-lamina { border: 2px solid #b9b9b9; transition: all 0.2s; border-radius: 8px; background-color: #dfdfdf; }
         
         /* 🟩 COLOR VERDE: Tienes exactamente 1 (Pegada) */
         .card-lamina.poseida { border-color: #198754; background-color: #f8fff9; }
@@ -115,253 +45,362 @@ try {
         /* 🟧 COLOR NARANJA: Tienes 3 o más (Múltiples repetidas) */
         .card-lamina.repetida-mas { border-color: #fd7e14; background-color: #fff8f2; }
         
-        /* Estilos base para las tarjetas de Coca-Cola */
+        /* Estilos para Coca-Cola */
         .bg-coca-cola { background-color: #dc3545 !important; color: white !important; }
         .card-cc { border-color: #dc3545; }
         .card-cc.poseida { border-color: #dc3545; background-color: #fff5f5; }
-        
-        /* Sobrescribir repetidas de Coca-Cola para que hereden el amarillo/naranja global */
         .card-cc.repetida-1 { border-color: #ffc107; background-color: #fffdf0; }
         .card-cc.repetida-mas { border-color: #fd7e14; background-color: #fff8f2; }
         
-        .numero-badge { font-size: 0.95rem; font-weight: bold; padding: 6px 10px; }
-        .seccion-titulo { border-bottom: 3px solid #212529; padding-bottom: 6px; margin-top: 45px; }
-        
-        /* Estilo para destacar cuando no hay resultados de búsqueda */
+        .seccion-titulo { border-bottom: 2px solid #212529; padding-bottom: 4px; margin-top: 25px; font-size: 1.1rem; }
         #sin-resultados { display: none; }
+        .sticky-top { top: 0; z-index: 1020; }
     </style>
 </head>
 
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
 
-    <div class="container mb-5">
-        <div class="row mb-4">
+    <div class="container px-2 px-sm-3 mb-5">
+        <div class="row mb-3">
             <div class="col-12 text-center">
-                <h2 class="fw-bold text-dark">📋 Mi Álbum de Láminas</h2>
-                <p class="text-muted">Gestiona tus monas en tiempo real. ¡Usa el buscador para filtrar al instante!</p>
+                <h3 class="fw-bold text-dark mb-1">📋 Mi Álbum de Láminas</h3>
+                <p class="text-muted small mb-0">Gestiona tus monas en tiempo real.</p>
             </div>
         </div>
 
-        <div class="row justify-content-center mb-4 sticky-top pt-2 pb-3 bg-light shadow-sm rounded">
+        <div class="row justify-content-center mb-3 sticky-top pt-2 pb-2 bg-light shadow-sm rounded">
             <div class="col-md-6 col-12">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 fs-5">🔍</span>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0 fs-6">🔍</span>
                     <input type="text" 
                            id="buscador-laminas" 
-                           class="form-control form-control-lg border-start-0 fs-6 shadow-none" 
-                           placeholder="Buscar por nombre o número (Ej: James, COL 2, Lamine)..."
+                           class="form-control border-start-0 fs-6 shadow-none" 
+                           placeholder="Buscar jugador o número (Ej: COL 10)..."
                            autocomplete="off">
                     <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" style="display:none;">❌</button>
                 </div>
             </div>
         </div>
 
-        <div id="sin-resultados" class="row my-5">
+        <div id="sin-resultados" class="row my-4">
             <div class="col-12 text-center">
-                <div class="alert alert-warning d-inline-block p-4 rounded-3 shadow-sm">
-                    <span class="fs-2">⚠️</span>
-                    <h5 class="fw-bold mt-2 mb-1">No se encontraron láminas</h5>
-                    <p class="text-muted small mb-0">Prueba verificando la ortografía o el número de la mona.</p>
+                <div class="alert alert-warning d-inline-block p-3 rounded shadow-sm mb-0">
+                    <span class="fs-4">⚠️</span>
+                    <h6 class="fw-bold mt-1 mb-0" style="font-size: 0.9rem;">No se encontraron láminas</h6>
                 </div>
             </div>
         </div>
+        
+        <div class="d-flex justify-content-end mb-3">
+            <button id="btn-candado" class="btn btn-danger fw-bold d-flex align-items-center gap-2 shadow-sm" onclick="alternarCandado()">
+                <span id="icono-candado">🔒</span> 
+                <span id="texto-candado">Álbum Bloqueado</span>
+            </button>
+        </div>
 
+        <!-- ⚡ CONTENEDOR DE ALTO RENDIMIENTO (V09) -->
         <div id="contenedor-album">
-            <?php foreach ($album_agrupado as $pais => $laminas_del_pais): ?>
-                <?php $es_cc = (strpos($pais, 'Coca-Cola') !== false); ?>
+            <!-- Los bloques de países y grillas se inyectarán de forma dinámica aquí -->
+        </div>
 
-                <div class="bloque-pais-seccion mb-4">
-                    
-                    <div class="row mb-3 seccion-titulo-row">
-                        <div class="col-12">
-                            <?php if ($es_cc): ?>
-                                <div class="p-3 bg-coca-cola rounded shadow-sm d-flex align-items-center mt-4">
-                                    <span class="fs-3 me-2">🥤</span>
-                                    <h4 class="fw-bold mb-0"><?= $pais ?></h4>
-                                </div>
-                            <?php else: ?>
-                                <h4 class="fw-bold text-dark seccion-titulo text-uppercase"><?= $pais ?></h4>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 grilla-tarjetas-row">
-                        <?php foreach ($laminas_del_pais as $lamina): ?>
-                            <?php 
-                                $cant = $lamina['cantidad'];
-                                
-                                // Lógica PHP inicial para pintar el color correcto al cargar la página
-                                $clase_color = '';
-                                if ($cant == 1) {
-                                    $clase_color = 'poseida';
-                                } elseif ($cant == 2) {
-                                    $clase_color = 'repetida-1';
-                                } elseif ($cant > 2) {
-                                    $clase_color = 'repetida-mas';
-                                }
-                            ?>
-                            
-                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 tarjeta-item-col" 
-                                 data-nombre="<?= strtolower(htmlspecialchars($lamina['nombre'])) ?>" 
-                                 data-numero="<?= strtolower(htmlspecialchars($lamina['numero'])) ?>">
-                                
-                                <div class="card card-lamina h-100 p-3 shadow-sm <?= $es_cc ? 'card-cc' : '' ?> <?= $clase_color ?>">
-                                    
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="badge <?= $es_cc ? 'bg-danger' : 'bg-primary' ?> numero-badge">
-                                            <?= htmlspecialchars($lamina['numero']) ?>
-                                        </span>
-                                        <?php if ($es_cc): ?>
-                                            <span class="badge bg-dark fw-bold text-warning">🥤 Exclusiva</span>
-                                        <?php elseif ($lamina['es_especial']): ?>
-                                            <span class="badge bg-warning text-dark fw-bold">⭐ Especial</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    
-                                    <h6 class="fw-bold text-dark mb-1 text-truncate nombre-jugador-txt" title="<?= htmlspecialchars($lamina['nombre']) ?>">
-                                        <?= htmlspecialchars($lamina['nombre']) ?>
-                                    </h6>
-                                    
-                                    <p class="text-muted small mb-3">Tienes: <strong class="fs-5 text-dark txt-cantidad"><?= $cant ?></strong></p>
-                                    
-                                    <div class="d-flex gap-2 mt-auto">
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-secondary w-50 fw-bold btn-restar" 
-                                                data-id="<?= $lamina['id'] ?>" 
-                                                <?= ($cant == 0) ? 'disabled' : '' ?>>-</button>
-                                        
-                                        <button type="button" 
-                                                class="btn btn-sm <?= $es_cc ? 'btn-danger' : 'btn-success' ?> w-50 fw-bold btn-sumar" 
-                                                data-id="<?= $lamina['id'] ?>">+</button>
-                                    </div>
-
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+        <!-- Spinner indicador para cuando vas bajando en el celular -->
+        <div id="cargando-spinner" class="text-center my-4" style="display: none;">
+            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+            <p class="text-muted small mt-1" style="font-size: 0.75rem;">Cargando más láminas...</p>
         </div>
     </div>
 
     <script>
+    // Mapeo global de títulos de países para renderizar las cabeceras al vuelo
+    const paisesMap = {
+        'FWC': '🏆 Especiales y Estadios Panini', 'CAN': '🇨🇦 Selección Canadá', 'USA': '🇺🇸 Selección Estados Unidos', 'MEX': '🇲🇽 Selección México',
+        'ARG': '🇦🇷 Selección Argentina', 'BRA': '🇧🇷 Selección Brasil', 'COL': '🇨🇴 Selección Colombia', 'ECU': '🇪🇨 Selección Ecuador',
+        'PAR': '🇵🇾 Selección Paraguay', 'URU': '🇺🇾 Selección Uruguay', 'HAI': '🇭🇹 Selección Haití', 'CUW': '🇨🇼 Selección Curazao', 'PAN': '🇵🇦 Selección Panama',
+        'GER': '🇩🇪 Selección Alemania', 'AUT': '🇦🇹 Selección Austria', 'BEL': '🇧🇪 Selección Bélgica', 'CRO': '🇭🇷 Selección Croacia',
+        'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Selección Escocia', 'ESP': '🇪🇸 Selección España', 'FRA': '🇫🇷 Selección Francia', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Selección Inglaterra',
+        'NOR': '🇳🇴 Selección Noruega', 'NED': '🇳🇱 Selección Países Bajos', 'POR' : '🇵🇹 Selección Portugal', 'SUI': '🇨🇭 Selección Suiza',
+        'SWE': '🇸🇪 Selección Suecia', 'CZE': '🇨🇿 Selección Chequia', 'TUR': '🇹🇷 Selección Turquía', 'BIH': '🇧🇦 Selección Bosnia y H.',
+        'ALG': '🇩🇿 Selección Argelia', 'CPV': '🇨🇻 Selección Cabo Verde', 'CIV': '🇨🇮 Selección Costa de Marfil', 'EGY': '🇪🇬 Selección Egipto',
+        'GHA': '🇬🇭 Selección Ghana', 'MAR': '🇲🇦 Selección Marruecos', 'SEN': '🇸🇳 Selección Senegal', 'RSA': '🇿🇦 Selección Sudáfrica',
+        'TUN': '🇹🇳 Selección Túnez', 'COD': '🇨🇩 Selección RD Congo', 'KSA': '🇸🇦 Selección Arabia S.', 'AUS': '🇦🇺 Selección Australia',
+        'KOR': '🇰🇷 Selección Corea del Sur', 'IRQ': '🇮🇶 Selección Irak/EAU', 'IRN': '🇮🇷 Selección Irán', 'JPN': '🇯🇵 Selección Japón',
+        'JOR': '🇯🇴 Selección Jordania', 'QAT': '🇶🇦 Selección Qatar', 'UZB': '🇺🇿 Selección Uzbekistán', 'NZL': '🇳🇿 Selección Nueva Zelanda',
+        'CC': '🥤 Sección Especial Coca-Cola'
+    };
+
+    let offset = 0;
+    const limite = 48; // Bloques ideales para grillas de responsive
+    let cargando = false;
+    let finDeLaminas = false;
+    let timerBusqueda;
+    let ultimoPaisRenderizado = "";
+
+    // --- CONTROL DE INICIALIZACIÓN ---
     document.addEventListener('DOMContentLoaded', function () {
         
-        // --- 1. LÓGICA DEL MOTOR DE BÚSQUEDA EN TIEMPO REAL ---
+        // Primera carga inmediata
+        cargarMasLaminas(true);
+
+        // Detectar scroll en el móvil
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600 && !cargando && !finDeLaminas) {
+                cargarMasLaminas(false);
+            }
+        });
+
         const buscador = document.getElementById('buscador-laminas');
         const btnLimpiar = document.getElementById('btn-limpiar-busqueda');
-        const seccionesPaises = document.querySelectorAll('.bloque-pais-seccion');
-        const alertaSinResultados = document.getElementById('sin-resultados');
 
-        buscador.addEventListener('input', function() {
-            const termino = this.value.trim().toLowerCase();
-            let totalVisiblesGlobal = 0;
-
-            // Mostrar/Ocultar botón de limpiar (X)
-            if (termino.length > 0) {
-                btnLimpiar.style.display = 'block';
-            } else {
-                btnLimpiar.style.display = 'none';
-            }
-
-            seccionesPaises.forEach(seccion => {
-                const tarjetas = seccion.querySelectorAll('.tarjeta-item-col');
-                let visiblesEnPais = 0;
-
-                tarjetas.forEach(tarjeta => {
-                    const nombre = tarjeta.getAttribute('data-nombre');
-                    const numero = tarjeta.getAttribute('data-numero');
-
-                    // Si el término coincide con el nombre o el número de la mona...
-                    if (nombre.includes(termino) || numero.includes(termino)) {
-                        tarjeta.style.setProperty('display', 'block', 'important');
-                        visiblesEnPais++;
-                        totalVisiblesGlobal++;
-                    } else {
-                        tarjeta.style.setProperty('display', 'none', 'important');
-                    }
-                });
-
-                // Si ninguna tarjeta de este país coincide, ocultamos todo el bloque (incluyendo la bandera)
-                if (visiblesEnPais === 0 && termino.length > 0) {
-                    seccion.style.display = 'none';
+        // Lógica del Buscador con DEBOUNCE
+        if (buscador) {
+            buscador.addEventListener('input', function() {
+                const termino = this.value.trim();
+                
+                if (termino.length > 0) {
+                    btnLimpiar.style.display = 'block';
                 } else {
-                    seccion.style.display = 'block';
+                    btnLimpiar.style.display = 'none';
                 }
+
+                clearTimeout(timerBusqueda);
+                timerBusqueda = setTimeout(() => {
+                    cargarMasLaminas(true); // Reinicia todo y busca desde cero
+                }, 400); 
             });
-
-            // Si no se encuentra absolutamente nada en todo el álbum, activamos la alerta de error
-            if (totalVisiblesGlobal === 0 && termino.length > 0) {
-                alertaSinResultados.style.display = 'block';
-            } else {
-                alertaSinResultados.style.display = 'none';
-            }
-        });
-
-        // Evento para el botón limpiar (X)
-        btnLimpiar.addEventListener('click', function() {
-            buscador.value = '';
-            buscador.dispatchEvent(new Event('input')); // Dispara el filtro para restablecer todo
-            buscador.focus();
-        });
-
-
-        // --- 2. LÓGICA ASÍNCRONA (AJAX) DE SUMAR/RESTAR YA CONFIGURADA ---
-        function ejecutarCambio(id, accion, botonOriginal) {
-            const tarjeta = botonOriginal.closest('.card-lamina');
-            const txtCantidad = tarjeta.querySelector('.txt-cantidad');
-            const btnRestar = tarjeta.querySelector('.btn-restar');
-            
-            const formData = new FormData();
-            formData.append('id', id);
-            formData.append('accion', accion);
-
-            fetch('actualizar_lamina.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const nuevaCant = data.nueva_cantidad;
-                    
-                    txtCantidad.textContent = nuevaCant;
-
-                    if (nuevaCant === 0) {
-                        btnRestar.setAttribute('disabled', 'disabled');
-                    } else {
-                        btnRestar.removeAttribute('disabled');
-                    }
-
-                    tarjeta.classList.remove('poseida', 'repetida-1', 'repetida-mas');
-                    
-                    if (nuevaCant === 1) {
-                        tarjeta.classList.add('poseida');       
-                    } else if (nuevaCant === 2) {
-                        tarjeta.classList.add('repetida-1');     
-                    } else if (nuevaCant > 2) {
-                        tarjeta.classList.add('repetida-mas');   
-                    }
-                }
-            })
-            .catch(err => console.error('Error en procesamiento AJAX:', err));
         }
 
-        document.querySelectorAll('.btn-sumar').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                ejecutarCambio(id, 'sumar', this);
+        if (btnLimpiar) {
+            btnLimpiar.addEventListener('click', function() {
+                buscador.value = '';
+                buscador.dispatchEvent(new Event('input'));
+                buscador.focus();
             });
-        });
+        }
 
-        document.querySelectorAll('.btn-restar').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                ejecutarCambio(id, 'restar', this);
-            });
-        });
+        // 🔒 Inicializar Estado del Candado
+        const estadoBloqueo = localStorage.getItem('album_bloqueado');
+        if (estadoBloqueo === null || estadoBloqueo === 'true') {
+            bloquearControles();
+        } else {
+            desbloquearControles();
+        }
     });
+
+    // --- MOTOR ASÍNCRONO DE CARGA (V09) ---
+    function cargarMasLaminas(reiniciarContenedor = false) {
+        if (cargando) return;
+        cargando = true;
+        document.getElementById('cargando-spinner').style.display = 'block';
+        document.getElementById('sin-resultados').style.display = 'none';
+
+        if (reiniciarContenedor) {
+            offset = 0;
+            finDeLaminas = false;
+            ultimoPaisRenderizado = "";
+            document.getElementById('contenedor-album').innerHTML = '';
+        }
+
+        const buscador = document.getElementById('buscador-laminas');
+        const termino = buscador ? buscador.value.trim() : '';
+
+        fetch(`obtener_laminas.php?limite=${limite}&offset=${offset}&buscar=${encodeURIComponent(termino)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.laminas.length > 0) {
+                    const contenedorAlbum = document.getElementById('contenedor-album');
+                    
+                    data.laminas.forEach(lamina => {
+                        const sigla = lamina.equipo;
+                        const esCc = (sigla === 'CC');
+                        const nombrePais = paisesMap[sigla] || '🌍 Otras Naciones';
+
+                        // Generar el bloque del país si cambió con respecto a la iteración anterior
+                        if (ultimoPaisRenderizado !== nombrePais) {
+                            ultimoPaisRenderizado = nombrePais;
+                            
+                            let cabeceraHtml = '';
+                            if (esCc) {
+                                cabeceraHtml = `
+                                    <div class="bloque-pais-seccion mb-3" data-pais-codigo="${sigla}">
+                                        <div class="row mb-2 seccion-titulo-row">
+                                            <div class="col-12">
+                                                <div class="p-2 bg-coca-cola rounded shadow-sm d-flex align-items-center mt-3">
+                                                    <span class="fs-6 me-2">🥤</span>
+                                                    <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">${nombrePais}</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-1 grilla-tarjetas-row"></div>
+                                    </div>`;
+                            } else {
+                                cabeceraHtml = `
+                                    <div class="bloque-pais-seccion mb-3" data-pais-codigo="${sigla}">
+                                        <div class="row mb-2 seccion-titulo-row">
+                                            <div class="col-12">
+                                                <h6 class="fw-bold text-dark seccion-titulo text-uppercase">${nombrePais}</h6>
+                                            </div>
+                                        </div>
+                                        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-1 grilla-tarjetas-row"></div>
+                                    </div>`;
+                            }
+                            contenedorAlbum.insertAdjacentHTML('beforeend', cabeceraHtml);
+                        }
+
+                        // Localizar la grilla activa del país correspondiente
+                        const bloquesActivos = contenedorAlbum.querySelectorAll(`[data-pais-codigo="${sigla}"] .grilla-tarjetas-row`);
+                        const grillaDestino = bloquesActivos[bloquesActivos.length - 1];
+
+                        const cant = parseInt(lamina.cantidad);
+                        let claseColor = '';
+                        if (cant === 1) claseColor = 'poseida';
+                        else if (cant === 2) claseColor = 'repetida-1';
+                        else if (cant > 2) claseColor = 'repetida-mas';
+
+                        const iconoDecorativo = esCc ? '<span class="text-danger fw-bold" style="font-size: 0.6rem;">🥤</span>' : (parseInt(lamina.es_especial) ? '<span class="text-warning fw-bold" style="font-size: 0.65rem;">⭐</span>' : '');
+
+                        const tarjetaHtml = `
+                            <div class="col tarjeta-item-col">
+                                <div class="card card-lamina h-100 p-1 shadow-sm ${esCc ? 'card-cc' : ''} ${claseColor}" style="min-height: 95px; border-radius: 8px;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="badge ${esCc ? 'bg-danger' : 'bg-primary'}" style="font-size: 0.7rem; padding: 2px 4px;">
+                                            ${lamina.numero}
+                                        </span>
+                                        ${iconoDecorativo}
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1 text-truncate nombre-jugador-txt" 
+                                        style="font-size: 0.75rem; line-height: 1.1; letter-spacing: -0.3px;" 
+                                        title="${lamina.nombre}">
+                                        ${lamina.nombre}
+                                    </h6>
+                                    <div class="d-flex align-items-center justify-content-between mt-auto bg-light rounded-2 p-1" style="border: 1px solid #dee2e6;">
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-secondary p-0 fw-bold btn-restar" 
+                                                style="width: 20px; height: 20px; font-size: 0.75rem; line-height: 1;"
+                                                ${cant === 0 ? 'disabled' : ''} 
+                                                onclick="ejecutarCambio(${lamina.id}, 'restar', this)">-</button>
+                                        <strong class="text-dark txt-cantidad" style="font-size: 0.95rem; font-family: monospace;">${cant}</strong>
+                                        <button type="button" 
+                                                class="btn btn-sm ${esCc ? 'btn-danger' : 'btn-success'} p-0 fw-bold btn-sumar" 
+                                                style="width: 20px; height: 20px; font-size: 0.75rem; line-height: 1;"
+                                                onclick="ejecutarCambio(${lamina.id}, 'sumar', this)">+</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        
+                        if(grillaDestino) {
+                            grillaDestino.insertAdjacentHTML('beforeend', tarjetaHtml);
+                        }
+                    });
+
+                    // Si vinieron menos elementos del límite, frenamos el infinite scroll
+                    if (data.laminas.length < limite) {
+                        finDeLaminas = true;
+                    }
+                    offset += limite;
+
+                    // Ajustar la opacidad del candado sobre las nuevas tarjetas añadidas
+                    const modoBloqueo = localStorage.getItem('album_bloqueado') === 'true';
+                    ajustarOpacidadBotones(modoBloqueo ? 0.5 : 1);
+
+                } else {
+                    finDeLaminas = true;
+                    if (reiniciarContenedor) {
+                        document.getElementById('sin-resultados').style.display = 'block';
+                    }
+                }
+            })
+            .catch(err => console.error("Error al procesar flujo:", err))
+            .finally(() => {
+                cargando = false;
+                document.getElementById('cargando-spinner').style.display = 'none';
+            });
+    }
+
+    // --- FUNCIONES DE CONTROL DEL CANDADO (GLOBALES) ---
+    function alternarCandado() {
+        const estaBloqueo = localStorage.getItem('album_bloqueado') === 'true';
+        if (estaBloqueo) {
+            desbloquearControles();
+        } else {
+            bloquearControles();
+        }
+    }
+
+    function bloquearControles() {
+        localStorage.setItem('album_bloqueado', 'true');
+        const btn = document.getElementById('btn-candado');
+        if (btn) {
+            btn.className = "btn btn-danger fw-bold d-flex align-items-center gap-2 shadow-sm";
+            document.getElementById('icono-candado').innerText = "🔒";
+            document.getElementById('texto-candado').innerText = "Álbum Bloqueado";
+        }
+        ajustarOpacidadBotones(0.5);
+    }
+
+    function desbloquearControles() {
+        localStorage.setItem('album_bloqueado', 'false');
+        const btn = document.getElementById('btn-candado');
+        if (btn) {
+            btn.className = "btn btn-success fw-bold d-flex align-items-center gap-2 shadow-sm";
+            document.getElementById('icono-candado').innerText = "🔓";
+            document.getElementById('texto-candado').innerText = "Modo Edición Activo";
+        }
+        ajustarOpacidadBotones(1);
+    }
+
+    function ajustarOpacidadBotones(valor) {
+        const botonesAC = document.querySelectorAll('.btn-sumar, .btn-restar');
+        botonesAC.forEach(b => {
+            b.style.opacity = valor;
+        });
+    }
+
+    // --- PROCESAMIENTO AJAX PROTEGIDO ---
+    function ejecutarCambio(id, accion, botonOriginal) {
+        if (localStorage.getItem('album_bloqueado') === 'true') {
+            alert("🚨 El álbum está bloqueado. Desactiva el candado superior para realizar modificaciones.");
+            return;
+        }
+
+        const tarjeta = botonOriginal.closest('.card-lamina');
+        const txtCantidad = tarjeta.querySelector('.txt-cantidad');
+        const btnRestar = tarjeta.querySelector('.btn-restar');
+        
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('accion', accion);
+
+        fetch('actualizar_lamina.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const nuevaCant = data.nueva_cantidad;
+                
+                txtCantidad.textContent = nuevaCant;
+
+                if (nuevaCant === 0) {
+                    btnRestar.setAttribute('disabled', 'disabled');
+                } else {
+                    btnRestar.removeAttribute('disabled');
+                }
+
+                tarjeta.classList.remove('poseida', 'repetida-1', 'repetida-mas');
+                
+                if (nuevaCant === 1) {
+                    tarjeta.classList.add('poseida');       
+                } else if (nuevaCant === 2) {
+                    tarjeta.classList.add('repetida-1');     
+                } else if (nuevaCant > 2) {
+                    tarjeta.classList.add('repetida-mas');   
+                }
+            }
+        })
+        .catch(err => console.error('Error en procesamiento AJAX:', err));
+    }
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

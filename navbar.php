@@ -2,7 +2,10 @@
 // ==============================================================================
 // navbar.php - Componente de Navegación Global Reutilizable (V07)
 // ==============================================================================
+require_once 'config.php';
 
+// Validar que el usuario tenga una sesión activa (excepto en el index si es el login)
+check_login();
 // Validamos si la sesión ya está iniciada antes de intentar leer el nombre de usuario
 $usuario_logueado = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Coleccionista';
 ?>
@@ -12,7 +15,7 @@ $usuario_logueado = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['u
         <!-- Logo Principal -->
         <a class="navbar-brand fw-bold d-flex align-items-center" href="index.php">
             <span class="fs-4 me-2">⚽</span> 
-            <span>Álbum Mundial 2026</span>
+            <span>Álbum Mundial 2026 v1.0</span>
         </a>
         
         <!-- Botón para colapsar en pantallas de Celular (Responsivo) -->
@@ -24,13 +27,16 @@ $usuario_logueado = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['u
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link fw-medium px-3 text-white-50" href="index.php">🏠 Panel de Control</a>
+                    <a class="nav-link fw-medium px-2 text-white-50" href="index.php">🏠 Panel de Control</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-medium px-3 text-white-50" href="laminas.php">📋 Gestionar Mi Álbum</a>
+                    <a class="nav-link fw-medium px-2 text-white-50" href="laminas.php">📋 Gestionar Mi Álbum</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-medium px-3 text-white-50" href="repetidas.php">📋 Gestionar Repetidas</a>
+                    <a class="nav-link fw-medium px-2 text-white-50" href="repetidas.php">📋 Gestionar Repetidas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-medium px-2 text-white-50" href="compartir.php">📋 Compartir</a>
                 </li>
             </ul>
             
