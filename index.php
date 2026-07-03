@@ -3,13 +3,9 @@
 // index.php - Dashboard Principal del Álbum Mundial 2026
 // Muestra estadísticas dinámicas y progreso del coleccionista
 // ==============================================================================
-if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
-    //$_SERVER['HTTPS'] = 'on';
-}
-session_start();
 require_once 'config.php';
 
-// Validar que el usuario tenga una sesión activa
+// Validar que el usuario tenga una sesión activa (excepto en el index si es el login)
 check_login();
 
 $usuario_id = $_SESSION['usuario_id'];
@@ -91,7 +87,7 @@ try {
                 WHERE usuario_id = ? AND cantidad > 0 
                 GROUP BY sigla 
                 ORDER BY total DESC 
-                LIMIT 5";
+                LIMIT 10";
     $stmt = $pdo->prepare($sql_mas);
     $stmt->execute([$usuario_id]);
     $top_mas_laminas = $stmt->fetchAll();
@@ -102,7 +98,7 @@ try {
                   WHERE usuario_id = ? AND cantidad > 0 
                   GROUP BY sigla 
                   ORDER BY total ASC 
-                  LIMIT 5";
+                  LIMIT 10";
     $stmt = $pdo->prepare($sql_menos);
     $stmt->execute([$usuario_id]);
     $top_menos_laminas = $stmt->fetchAll();
@@ -113,7 +109,7 @@ try {
                 WHERE usuario_id = ? AND cantidad > 1 
                 GROUP BY sigla 
                 ORDER BY total_repetidas DESC 
-                LIMIT 5";
+                LIMIT 10";
     $stmt = $pdo->prepare($sql_rep);
     $stmt->execute([$usuario_id]);
     $top_repetidas = $stmt->fetchAll();
@@ -152,6 +148,91 @@ try {
 } catch (\PDOException $e) {
     die("Error al cargar las estadísticas: " . $e->getMessage());
 }
+
+// ==============================================================================
+// LOGICA DE ESCUDOS - PANEL DE CONTROL (V08-MICRO)
+// ==============================================================================
+try {
+    // NOTA: Ajusta el LIKE '%Escudo%' si en tu BD se llaman diferente (ej: '%Badge%' o 'numero LIKE "% 1"')
+    // Esta consulta trae todas las monas que sean escudos para el usuario actual
+    $stmt_escudos = $pdo->prepare("
+        SELECT *, (cantidad - 1) AS excedente 
+        FROM laminas 
+        WHERE usuario_id = ? AND nombre LIKE '%Escudo%'
+        ORDER BY id ASC
+    ");
+    $stmt_escudos->execute([$usuario_id]);
+    $todos_los_escudos = $stmt_escudos->fetchAll();
+
+    // Contadores para el resumen del Panel
+    $total_escudos_album = count($todos_los_escudos);
+    $escudos_poseidos = 0;
+    $escudos_faltantes = 0;
+    $escudos_repetidos_total = 0;
+
+    $lista_faltantes = [];
+    $lista_repetidos = [];
+    $lista_poseidos = [];
+
+    foreach ($todos_los_escudos as $escudo) {
+        if ($escudo['cantidad'] == 0) {
+            $escudos_faltantes++;
+            $lista_faltantes[] = $escudo;
+        } else {
+            $escudos_poseidos++;
+            $lista_poseidos[] = $escudo;
+            
+            if ($escudo['cantidad'] > 1) {
+                $escudos_repetidos_total += $escudo['excedente'];
+                $lista_repetidos[] = $escudo;
+            }
+        }
+    }
+} catch (\PDOException $e) {
+    die("Error al cargar control de escudos: " . $e->getMessage());
+}
+
+// ==============================================================================
+// LÓGICA DE FOTOS DE EQUIPOS (NÚMERO 13) - PANEL DE CONTROL (V08-MICRO)
+// ==============================================================================
+try {
+    // Consulta para traer únicamente las láminas de fotos grupales de los equipos (Número 13)
+    $stmt_fotos_equipos = $pdo->prepare("
+        SELECT *, (cantidad - 1) AS excedente 
+        FROM laminas 
+        WHERE usuario_id = ? AND numero LIKE '% 13' AND nombre LIKE '%Equipo%'
+        ORDER BY id ASC
+    ");
+    $stmt_fotos_equipos->execute([$usuario_id]);
+    $todas_las_fotos = $stmt_fotos_equipos->fetchAll();
+
+    // Contadores para el resumen del Panel
+    $total_fotos_album = count($todas_las_fotos);
+    $fotos_poseidas = 0;
+    $fotos_faltantes = 0;
+    $fotos_repetidas_total = 0;
+
+    $lista_fotos_faltantes = [];
+    $lista_fotos_repetidos = [];
+    $lista_fotos_poseidas = [];
+
+    foreach ($todas_las_fotos as $foto) {
+        if ($foto['cantidad'] == 0) {
+            $fotos_faltantes++;
+            $lista_fotos_faltantes[] = $foto;
+        } else {
+            $fotos_poseidas++;
+            $lista_fotos_poseidas[] = $foto;
+            
+            if ($foto['cantidad'] > 1) {
+                $fotos_repetidas_total += $foto['excedente'];
+                $lista_fotos_repetidas[] = $foto;
+            }
+        }
+    }
+} catch (\PDOException $e) {
+    die("Error al cargar control de fotos de equipos: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -159,6 +240,8 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Álbum Mundial - Inicio</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link class="favicon-apple" rel="apple-touch-icon" href="img/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .card-stat { transition: transform 0.2s; border: none; }
@@ -307,6 +390,202 @@ try {
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </ul>
+                </div>
+            </div>
+            <!-- CONTROL DE ESCUDOS -->
+            <div class="card shadow-sm border-0 bg-white p-3 mb-4 rounded-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">🛡️ Control de Escudos</h5>
+                        <p class="text-muted small mb-0">Progreso exclusivo de las insignias de las selecciones.</p>
+                    </div>
+                    <span class="badge bg-dark fs-6"><?= $escudos_poseidos ?> / <?= $total_escudos_album ?></span>
+                </div>
+
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-success-subtle rounded border border-success-subtle">
+                            <strong class="d-block text-success fs-5"><?= $escudos_poseidos ?></strong>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">Tengo</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-danger-subtle rounded border border-danger-subtle">
+                            <strong class="d-block text-danger fs-5"><?= $escudos_faltantes ?></strong>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">Faltan</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-warning-subtle rounded border border-warning-subtle">
+                            <strong class="d-block text-warning-dark fs-5" style="color: #856404;"><?= $escudos_repetidos_total ?></strong>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">Repes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="nav nav-pills nav-fill bg-light p-1 rounded-2 mb-3" id="pills-tab-escudos" role="tablist" style="font-size: 0.8rem;">
+                    <li class="nav-item">
+                        <button class="nav-link active py-1 fw-bold" id="pills-tengo-tab" data-bs-toggle="pill" data-bs-target="#pills-tengo" type="button" role="tab">Tengo</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-1 fw-bold text-danger" id="pills-faltan-tab" data-bs-toggle="pill" data-bs-target="#pills-faltan" type="button" role="tab">Faltan (<?= $escudos_faltantes ?>)</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-1 fw-bold text-warning" id="pills-repes-tab" data-bs-toggle="pill" data-bs-target="#pills-repes" type="button" role="tab">Repes (<?= $escudos_repetidos_total ?>)</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="pills-tabContentEscudos">
+                    
+                    <div class="tab-pane fade show active" id="pills-tengo" role="tabpanel">
+                        <?php if(empty($lista_poseidos)): ?>
+                            <p class="text-center text-muted small my-3">No tienes ningún escudo pegado aún. 😢</p>
+                        <?php else: ?>
+                            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-1">
+                                <?php foreach($lista_poseidos as $esc): ?>
+                                    <div class="col">
+                                        <div class="p-1 text-center rounded-2 border border-success text-dark fw-bold" style="font-size: 0.72rem; background-color: #f8fff9; min-height: 42px; display: flex; flex-direction: column; justify-content: center;">
+                                            <span><?= htmlspecialchars($esc['numero']) ?></span>
+                                            <span class="text-muted text-truncate" style="font-size: 0.58rem; width: 100%;"><?= htmlspecialchars($esc['equipo']) ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-faltan" role="tabpanel">
+                        <?php if(empty($lista_faltantes)): ?>
+                            <p class="text-center text-success small fw-bold my-3">🎉 ¡Felicidades! Tienes todos los escudos del mundial.</p>
+                        <?php else: ?>
+                            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-1">
+                                <?php foreach($lista_faltantes as $esc): ?>
+                                    <div class="col">
+                                        <div class="p-1 text-center rounded-2 border text-secondary" style="font-size: 0.72rem; background-color: #eaeaea; border-color: #b9b9b9; min-height: 42px; display: flex; flex-direction: column; justify-content: center; font-weight: bold;">
+                                            <span><?= htmlspecialchars($esc['numero']) ?></span>
+                                            <span class="text-muted text-truncate" style="font-size: 0.58rem; width: 100%;"><?= htmlspecialchars($esc['equipo']) ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-repes" role="tabpanel">
+                        <?php if(empty($lista_repetidos)): ?>
+                            <p class="text-center text-muted small my-3">No tienes escudos repetidos para negociar.</p>
+                        <?php else: ?>
+                            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-1">
+                                <?php foreach($lista_repetidos as $esc): ?>
+                                    <div class="col">
+                                        <div class="p-1 text-center rounded-2 border border-warning text-dark fw-bold d-flex flex-column justify-content-center align-items-center" style="font-size: 0.72rem; background-color: #fffdf0; min-height: 42px;">
+                                            <span><?= htmlspecialchars($esc['numero']) ?></span>
+                                            <span class="badge bg-warning text-dark p-0 px-1 mt-0" style="font-size: 0.62rem; font-family: monospace;">+<?= $esc['excedente'] ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                </div>
+            </div>
+            <!-- CONTROL DE SELECCIONES -->
+            <div class="card shadow-sm border-0 bg-white p-3 mb-4 rounded-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">👥 Fotos de Equipos (N° 13)</h5>
+                        <p class="text-muted small mb-0">Progreso de las láminas de las formaciones de cada selección.</p>
+                    </div>
+                    <span class="badge bg-dark fs-6"><?= $fotos_poseidas ?> / <?= $total_fotos_album ?></span>
+                </div>
+
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-success-subtle rounded border border-success-subtle">
+                            <strong class="d-block text-success fs-5"><?= $fotos_poseidas ?></strong>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">Tengo</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-danger-subtle rounded border border-danger-subtle">
+                            <strong class="d-block text-danger fs-5"><?= $fotos_faltantes ?></strong>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">Faltan</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-warning-subtle rounded border border-warning-subtle">
+                            <strong class="d-block text-warning-dark fs-5" style="color: #856404;"><?= $fotos_repetidas_total ?></strong>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">Repes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="nav nav-pills nav-fill bg-light p-1 rounded-2 mb-3" id="pills-tab-fotos" role="tablist" style="font-size: 0.8rem;">
+                    <li class="nav-item">
+                        <button class="nav-link active py-1 fw-bold" id="pills-fotos-tengo-tab" data-bs-toggle="pill" data-bs-target="#pills-fotos-tengo" type="button" role="tab">Tengo</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-1 fw-bold text-danger" id="pills-fotos-faltan-tab" data-bs-toggle="pill" data-bs-target="#pills-fotos-faltan" type="button" role="tab">Faltan (<?= $fotos_faltantes ?>)</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-1 fw-bold text-warning" id="pills-fotos-repes-tab" data-bs-toggle="pill" data-bs-target="#pills-fotos-repes" type="button" role="tab">Repes (<?= $fotos_repetidas_total ?>)</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="pills-tabContentFotos">
+                    
+                    <div class="tab-pane fade show active" id="pills-fotos-tengo" role="tabpanel">
+                        <?php if(empty($lista_fotos_poseidas)): ?>
+                            <p class="text-center text-muted small my-3">No tienes ninguna foto de equipo pegada todavía. 😢</p>
+                        <?php else: ?>
+                            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-1" style="max-height: 220px; overflow-y: auto;">
+                                <?php foreach($lista_fotos_poseidas as $f_pos): ?>
+                                    <div class="col">
+                                        <div class="p-1 text-center rounded-2 border border-success text-dark fw-bold" style="font-size: 0.72rem; background-color: #f8fff9; min-height: 42px; display: flex; flex-direction: column; justify-content: center;">
+                                            <span><?= htmlspecialchars($f_pos['numero']) ?></span>
+                                            <span class="text-muted text-truncate" style="font-size: 0.58rem; width: 100%;"><?= htmlspecialchars($f_pos['equipo']) ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-fotos-faltan" role="tabpanel">
+                        <?php if(empty($lista_fotos_faltantes)): ?>
+                            <p class="text-center text-success small fw-bold my-3">🎉 ¡Excelente! Tienes todas las fotos de equipo del álbum.</p>
+                        <?php else: ?>
+                            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-1" style="max-height: 220px; overflow-y: auto;">
+                                <?php foreach($lista_fotos_faltantes as $f_fal): ?>
+                                    <div class="col">
+                                        <div class="p-1 text-center rounded-2 border text-secondary" style="font-size: 0.72rem; background-color: #eaeaea; border-color: #b9b9b9; min-height: 42px; display: flex; flex-direction: column; justify-content: center; font-weight: bold;">
+                                            <span><?= htmlspecialchars($f_fal['numero']) ?></span>
+                                            <span class="text-muted text-truncate" style="font-size: 0.58rem; width: 100%;"><?= htmlspecialchars($f_fal['equipo']) ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-fotos-repes" role="tabpanel">
+                        <?php if(empty($lista_fotos_repetidas)): ?>
+                            <p class="text-center text-muted small my-3">No tienes fotos de equipos repetidas.</p>
+                        <?php else: ?>
+                            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-1" style="max-height: 220px; overflow-y: auto;">
+                                <?php foreach($lista_fotos_repetidas as $f_rep): ?>
+                                    <div class="col">
+                                        <div class="p-1 text-center rounded-2 border border-warning text-dark fw-bold d-flex flex-column justify-content-center align-items-center" style="font-size: 0.72rem; background-color: #fffdf0; min-height: 42px;">
+                                            <span><?= htmlspecialchars($f_rep['numero']) ?></span>
+                                            <span class="badge bg-warning text-dark p-0 px-1 mt-0" style="font-size: 0.62rem; font-family: monospace;">+<?= $f_rep['excedente'] ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
                 </div>
             </div>
 

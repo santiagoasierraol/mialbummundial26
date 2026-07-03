@@ -1,6 +1,7 @@
 <?php
 // ==============================================================================
-// login.php - Control de Acceso y Registro con Inyección Masiva desde Archivo Externo
+// login.php - Control de Acceso y Registro con Inyección Masiva (Versión V08-MICRO)
+// Compatible con la columna indexada 'equipo' para alto rendimiento
 // ==============================================================================
 require_once 'config.php';
 
@@ -9,7 +10,7 @@ $error_registro = '';
 $success_registro = '';
 $mostrar_pestana_registro = false;
 
-// FUNCIÓN DE INICIALIZACIÓN OPTIMIZADA (Versión 4 Parámetros - V06)
+// FUNCIÓN DE INICIALIZACIÓN OPTIMIZADA CON COLUMNA EQUIPO (V08)
 function inicializar_album_local($pdo, $usuario_id) {
     // 📂 Importamos el listado masivo desde el archivo externo aislado
     $laminas_iniciales = require 'datos_album.php';
@@ -17,8 +18,11 @@ function inicializar_album_local($pdo, $usuario_id) {
     try {
         $pdo->beginTransaction(); // Abrimos transacción para máxima velocidad local
         
-        // Cambiamos el '0' fijo por un signo de interrogación '?' para la cantidad
-        $stmt = $pdo->prepare("INSERT INTO laminas (usuario_id, numero, nombre, es_especial, cantidad) VALUES (?, ?, ?, ?, ?)");
+        // CORRECCIÓN: Agregamos la columna 'equipo' y calculamos su valor dinámicamente con SUBSTRING_INDEX
+        $stmt = $pdo->prepare("
+            INSERT INTO laminas (usuario_id, numero, nombre, es_especial, cantidad, equipo) 
+            VALUES (?, ?, ?, ?, ?, SUBSTRING_INDEX(?, ' ', 1))
+        ");
         
         foreach ($laminas_iniciales as $lamina) {
             // Asignamos las posiciones del arreglo de forma segura
@@ -27,13 +31,14 @@ function inicializar_album_local($pdo, $usuario_id) {
             $es_especial = $lamina[2] ?? 0; // Tercer elemento del array
             $cantidad    = $lamina[3] ?? 0; // Cuarto elemento del array (Si no existe, arranca en 0)
 
-            // Ejecutamos pasando las 5 variables en orden a los '?'
+            // Ejecutamos pasando las variables correspondientes a los parámetros del INSERT
             $stmt->execute([
                 $usuario_id, 
                 $numero, 
                 $nombre, 
                 $es_especial, 
-                $cantidad
+                $cantidad,
+                $numero // Se envía por segunda vez para que SUBSTRING_INDEX extraiga el prefijo (Ej: 'COL')
             ]);
         }
         
@@ -84,13 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$username, $password_hash]);
                 $nuevo_id = $pdo->lastInsertId();
 
-                // Llama al inicializador que consume datos_album.php
+                // Llama al inicializador optimizado para la V08
                 inicializar_album_local($pdo, $nuevo_id);
                 
                 $success_registro = "¡Cuenta configurada con éxito! Ya puedes iniciar sesión.";
                 $mostrar_pestana_registro = false;
             } catch (\PDOException $e) {
-                $error_registro = "Error: El usuario ya existe o la base de datos falló.";
+                $error_registro = "Error: El usuario ya existe o la base de datos falló. Detalle: " . $e->getMessage();
             }
         } else {
             $error_registro = "Todos los campos son obligatorios.";
@@ -104,6 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Mi Álbum Mundial 2026</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link class="favicon-apple" rel="apple-touch-icon" href="img/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .nav-tabs .nav-link { color: #495057; font-weight: 600; border: none; }
@@ -114,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-light d-flex align-items-center justify-content-center" style="min-height: 100vh;">
 
     <div class="card card-auth shadow-lg p-4" style="width: 100%; max-width: 430px;">
-        <h2 class="text-center mb-4 fw-bold">⚽ Mi Álbum Mundial 2026</h2>
+        <h2 class="text-center mb-4 fw-bold">⚽ Mi Álbum Mundial 2026 v1.0</h2>
         
         <ul class="nav nav-tabs nav-fill mb-4" id="authTabs" role="tablist">
             <li class="nav-item">
